@@ -29,6 +29,7 @@ class GatherInfo:
 			return amount_dirs, amount_files
 	#List all file names in a directory:
 	def getAllFileNamesinDir(mainDir):
+		print("Hellow there")
 		dir_list = os.listdir(mainDir)
 		return dir_list
 	#Used for display purposes:
