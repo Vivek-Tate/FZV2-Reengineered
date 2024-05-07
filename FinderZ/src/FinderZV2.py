@@ -29,7 +29,6 @@ class GatherInfo:
 			return amount_dirs, amount_files
 	#List all file names in a directory:
 	def getAllFileNamesinDir(mainDir):
-		print("Hellow there")
 		dir_list = os.listdir(mainDir)
 		return dir_list
 	#Used for display purposes:
@@ -49,14 +48,15 @@ class GatherInfo:
 		if returnStringType == False:
 			lines = f.readlines()
 		else:
-			lines = f.read()
+			lines = f.read().strip()
 		return lines
 	
 	#Get tile line amount
+	##Modified the method to not accept a blank line as a count
 	def getFileLineAmount(filePath):
-		f = open(filePath, 'r')
-		lines = f.readlines()
-		amount = len(lines)
+		with open(filePath, 'r') as f:
+			lines = f.readlines()
+			amount = sum(1 for line in lines if line.strip())
 		return amount
 	
     #New in V2:
