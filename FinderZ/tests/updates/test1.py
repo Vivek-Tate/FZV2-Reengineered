@@ -20,3 +20,14 @@ from FinderZV2 import callBash
 #Gets the number of lines in a file, will even return a blank line as a count
 # lineAmount = GatherInfo.getFileLineAmount('D:\Sem2\SR-Test\Testing-FinderZ/tp.txt') #Replace /path/to/file with a path to a file.
 # print(lineAmount)
+
+#Run a bash script
+# callBash.runFile("D:\Sem2\SR-Test\Testing-FinderZ/helloworld.bat")
+
+# main_dir = r"D:\Sem2\SR-Test\Testing-FinderZ\New-test-dir"
+# backup_dir = [r"D:\Sem2\SR-Test\Testing-FinderZ\backup_dir"]
+# Backup.backup(main_dir, backup_dir)
+
+# Backup.backup(r"D:\Sem2\SR-Test\Testing-FinderZ\New-test-dir", [r"D:\Sem2\SR-Test\Testing-FinderZ\backup_dir"])
+
+
