@@ -31,3 +31,14 @@ def test_findFiles_inexact_search(setup_test_dir):
     results = fileOperands.findFiles("testfile", str(setup_test_dir), exactSearch=False)
     expected = [str(setup_test_dir / "testfile1.txt"), str(setup_test_dir / "testfile2.txt")]
     assert set(results) == set(expected)
+
+# Scan Files
+def test_scanFilesForContent(setup_test_dir):
+    # Create a file with content
+    file_with_keyword = setup_test_dir / "keywordfile.txt"
+    file_with_keyword.write_text("This file contains the keyword.")
+
+    # Test scanning for content
+    results = fileOperands.scanFilesForContent("keyword", str(setup_test_dir))
+    expected = [str(file_with_keyword)]
+    assert results == expected
