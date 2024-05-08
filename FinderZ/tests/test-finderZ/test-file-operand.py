@@ -42,3 +42,17 @@ def test_scanFilesForContent(setup_test_dir):
     results = fileOperands.scanFilesForContent("keyword", str(setup_test_dir))
     expected = [str(file_with_keyword)]
     assert results == expected
+
+
+
+# Remove Files
+def test_removeFiles(setup_test_dir):
+    # Create a file to remove
+    file_to_remove = setup_test_dir / "toremove.txt"
+    file_to_remove.write_text("File to remove.")
+
+    # Remove the file
+    fileOperands.removeFiles("toremove.txt", str(setup_test_dir))
+
+    # Check that the file was removed
+    assert not file_to_remove.exists()
