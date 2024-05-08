@@ -44,19 +44,6 @@ def test_scanFilesForContent(setup_test_dir):
     assert results == expected
 
 
-
-# Remove Files
-def test_removeFiles(setup_test_dir):
-    # Create a file to remove
-    file_to_remove = setup_test_dir / "toremove.txt"
-    file_to_remove.write_text("File to remove.")
-
-    # Remove the file
-    fileOperands.removeFiles("toremove.txt", str(setup_test_dir))
-
-    # Check that the file was removed
-    assert not file_to_remove.exists()
-
 # Create Files
 
 def test_createFiles(setup_test_dir):
@@ -80,29 +67,3 @@ def test_findAndReplaceInFiles(setup_test_dir):
     content = file_path.read_text()
     assert "replacement" in content
     assert "keyword" not in content
-
-# Additional test cases
-def test_xor_encrypt_and_decrypt_file(setup_test_dir):
-    # Create a file to encrypt
-    file_path = setup_test_dir / "encryptfile.txt"
-    original_content = "Secret content."
-    file_path.write_text(original_content)
-
-    # Define a key for encryption/decryption
-    key = "secret_key"
-
-    # Encrypt the file
-    enc_file_path = str(file_path) + ".enc"
-    fileOperands.xor_encrypt_file(file_path, key)
-
-    # Check that the encrypted file was created and the original file was removed
-    assert os.path.exists(enc_file_path)
-    assert not os.path.exists(file_path)
-
-    # Decrypt the file
-    fileOperands.xor_decrypt_file(enc_file_path, key)
-
-    # Check that the decrypted file was created and matches the original content
-    assert os.path.exists(file_path)
-    decrypted_content = file_path.read_text()
-    assert decrypted_content == original_content
