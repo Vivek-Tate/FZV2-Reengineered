@@ -66,3 +66,17 @@ def test_createFiles(setup_test_dir):
     # Verify that the files were created
     created_files = [f for f in os.listdir(setup_test_dir) if f.startswith("testfile") and f.endswith(".txt")]
     assert len(created_files) == 3
+
+# Find and Replace Files
+def test_findAndReplaceInFiles(setup_test_dir):
+    # Create a file with content
+    file_path = setup_test_dir / "replacefile.txt"
+    file_path.write_text("This line contains a keyword.")
+
+    # Perform the find and replace
+    fileOperands.findAndReplaceInFiles("keyword", "replacement", str(setup_test_dir))
+
+    # Check that the replacement was made
+    content = file_path.read_text()
+    assert "replacement" in content
+    assert "keyword" not in content
