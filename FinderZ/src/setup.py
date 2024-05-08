@@ -4,8 +4,8 @@ setup(
     name='FinderZ',
     version='2.1.2',
     description='A tool for gathering information about files and directories',
-    author='Your Name',
-    author_email='your.email@example.com',
+    author='Vivek Shravan Tate',
+    author_email='vivektate.developer@gmail.com',
     packages=find_packages(),
     entry_points={
         'console_scripts': [
