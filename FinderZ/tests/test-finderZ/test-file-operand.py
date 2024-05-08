@@ -61,10 +61,10 @@ def test_removeFiles(setup_test_dir):
 
 def test_createFiles(setup_test_dir):
     # Create files
-    fileOperands.createFiles(3, "testfile", ".txt", str(setup_test_dir))
+    fileOperands.createFiles(3, "testcreatefile", ".txt", str(setup_test_dir))
 
     # Verify that the files were created
-    created_files = [f for f in os.listdir(setup_test_dir) if f.startswith("testfile") and f.endswith(".txt")]
+    created_files = [f for f in os.listdir(setup_test_dir) if f.startswith("testcreatefile") and f.endswith(".txt")]
     assert len(created_files) == 3
 
 # Find and Replace Files
