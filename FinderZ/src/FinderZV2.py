@@ -798,7 +798,9 @@ class fileOperands:
 #The main logging class (Used in Synchronize and Backup classes)
 class Logging:
 	#Here, the announcement is simply something to announce/thecurrent/main activity or in this case print. dir is the parameter that takes in dir. dirAction consists of things like removing, adding, or copying, renaming, etc.
-	def Log(loggingBool, logList, announcement = '', dir1 = '', dir2 = '', dir1Action = '', dir2Action = '', logTag = 'NC', log_non_critical = True):
+	@staticmethod
+	def Log(loggingBool, logList, announcement='', dir1='', dir2='', dir1Action='', dir2Action='', logTag='NC',
+			log_non_critical=True):
 		#'NC' = Not Critical, 'C' is Critical, for the logTag
 		#Check if the boolean loggingBool is True, to determine whether or not the User actually wants to log or not:
 		
@@ -857,17 +859,16 @@ class Logging:
 		
 
 	#The main function to write to the file:
-	def writeLogsToFile(creationPath, fileLines, mode):
-		#Get the current date:
-		currentTime = time.ctime()
+	def writeLogsToFile(self, creationPath, fileLines, mode):
+		# Get the current date:
+		currentTime = time.strftime("%Y-%m-%d_%H-%M-%S")  # This will give a string like '2024-05-09_00-36-25'
 		logFileName = f"LogRun({mode})__{currentTime}.txt"
-		
+
 		file = os.path.join(creationPath, logFileName)
-		#Create and open the log file:
-		f = open(file, 'a')
-		
-		#Write the lines:
-		f.writelines(fileLines)
+		# Create and open the log file:
+		with open(file, 'a') as f:
+			# Write the lines:
+			f.writelines(fileLines)
 		
 		f.close()
 

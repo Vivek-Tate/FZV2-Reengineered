@@ -31,3 +31,5 @@ from FinderZV2 import callBash
 # Backup.backup(r"D:\Sem2\SR-Test\Testing-FinderZ\New-test-dir", [r"D:\Sem2\SR-Test\Testing-FinderZ\backup_dir"])
 
 
+files = GatherInfo.getAllFileNamesinDir('/Users/vivek/Developer/Python-Programming-Workspace/COM6523-Software-Reengineering/Assignment-2023-24-FinderZ') #Replace /path/to/dir with a path to a directory.
+print(files)
