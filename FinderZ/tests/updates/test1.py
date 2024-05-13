@@ -31,5 +31,27 @@ from FinderZV2 import callBash
 # Backup.backup(r"D:\Sem2\SR-Test\Testing-FinderZ\New-test-dir", [r"D:\Sem2\SR-Test\Testing-FinderZ\backup_dir"])
 
 
-files = GatherInfo.getAllFileNamesinDir('/Users/vivek/Developer/Python-Programming-Workspace/COM6523-Software-Reengineering/Assignment-2023-24-FinderZ') #Replace /path/to/dir with a path to a directory.
+#files = GatherInfo.getAllFileNamesinDir('/Users/vivek/Developer/Python-Programming-Workspace/COM6523-Software-Reengineering/Assignment-2023-24-FinderZ') #Replace /path/to/dir with a path to a directory.
+#print(files)
+
+files = GatherInfo.isEmptyDir('C:/Users/kavik/PycharmProjects/grp-project/group-project-pgt04/FinderZ/tests/Testing-FinderZ')
 print(files)
+
+actual_output = GatherInfo.computeHash('C:/Users/kavik/PycharmProjects/grp-project/group-project-pgt04/FinderZ/tests/Testing-FinderZ/Now.txt')
+print(actual_output)
+
+list1 = 'tp.txt'
+list2 = 'Now.txt'
+actual_output = GatherInfo.isOneInCommon(list1, list2)
+print(actual_output)
+
+directories, files = GatherInfo.readDir('C:/Users/kavik/PycharmProjects/grp-project/group-project-pgt04/FinderZ/tests/Testing-FinderZ')
+print(files, directories)
+
+actual_file = GatherInfo.getTotalInfo('C:/Users/kavik/PycharmProjects/grp-project/group-project-pgt04/FinderZ/tests/Testing-FinderZ/Now.txt', 'int', recursive=True)
+print(actual_file)
+
+file1 = 'C:/Users/kavik/PycharmProjects/grp-project/group-project-pgt04/FinderZ/tests/Testing-FinderZ/Now.txt'
+file2 = 'C:/Users/kavik/PycharmProjects/grp-project/group-project-pgt04/FinderZ/tests/Testing-FinderZ/tp.txt'
+difference = GatherInfo.compareFiles(file1, file2)
+print(difference)
