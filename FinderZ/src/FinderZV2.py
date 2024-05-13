@@ -17,20 +17,28 @@ class GatherInfo:
 	#Find the amount of files in a directory:
 	def getAmountofComponentsinDir(dir, returnAmountFiles = True, returnAmountDirectories = True):
 		directories, files = GatherInfo.readDir(dir)
-		
 		#Get each amount:
-		amount_dirs = len(directories)
-		amount_files = len(files)
-		if returnAmountFiles == False:
-			return amount_dirs
-		elif returnAmountDirectories == False:
-			return amount_files
+		count_directories = len(directories)
+		count_files = len(files)
+		if not returnAmountFiles and returnAmountFiles:
+			return count_directories
+		elif returnAmountFiles and not returnAmountDirectories:
+			return count_files
 		else:
-			return amount_dirs, amount_files
+			return count_directories, count_files
+
 	#List all file names in a directory:
 	def getAllFileNamesinDir(mainDir):
-		dir_list = os.listdir(mainDir)
-		return dir_list
+		try:
+			filenames = os.listdir(mainDir)
+			return filenames
+		except FileNotFoundError:
+			print(f"Directory '{mainDir}' not found.")
+			return []
+		except PermissionError:
+			print(f"No permission to access directory '{mainDir}'.")
+			return []
+
 	#Used for display purposes:
 	def expandListInfo(list):
 		amountData = len(list)
@@ -39,25 +47,34 @@ class GatherInfo:
 			placeHolder = str(list[iterator])
 			print(placeHolder + "\n")
 			iterator += 1
+
 	#Get contents of file:
 	def getFileLineContents(filePath, returnStringType = False):
 		try:
-			f = open(filePath, 'r')
-		except:
-			raise Exception("ERR: The file could not be opened/decoded.")
-		if returnStringType == False:
-			lines = f.readlines()
-		else:
-			lines = f.read().strip()
+			with open(filePath, 'r') as file:
+				if not returnStringType:
+					lines = file.readlines()
+				else:
+					lines = file.read().strip()
+		except FileNotFoundError:
+			raise FileNotFoundError("ERR: The file could not be found.")
+		except PermissionError:
+			raise PermissionError("ERR: Permission denied to open the file.")
+		except Exception as e:
+			raise Exception(f"ERR: An error occured while opening the file: {str(e)}")
 		return lines
 	
 	#Get tile line amount
 	##Modified the method to not accept a blank line as a count
-	def getFileLineAmount(filePath):
-		with open(filePath, 'r') as f:
-			lines = f.readlines()
-			amount = sum(1 for line in lines if line.strip())
-		return amount
+	def getFileLineAmount(file_path):
+		try:
+			with open(file_path, 'r') as file:
+				lines = [line.strip() for line in file.readlines()]
+				amount_of_lines = sum(1 for line in lines if line)
+				return amount_of_lines
+		except FileNotFoundError:
+			print("File not found", file_path)
+			return -1
 	
     #New in V2:
     #New function in V2:
@@ -1276,23 +1293,23 @@ class Synchronize:
 class Backup:
 	#Capture the newLogList from the mainIteration function:
 	def main(parentmaindir, childbackupdir, loggingBool, log_non_critical = True):
-		
-		
-		
+
+
+
 		#Define the main loglist to append to:
 		logList = []
-		
-		
+
+
 		#Get the source components of the parentdir and childsyncdir (in order to compare them later:)
-		
+
 		maindirs, mainfiles = GatherInfo.readDir(parentmaindir)
 		syncdirs, syncfiles = GatherInfo.readDir(childbackupdir)
-		
+
 		#Log it:
 		newLogList = Logging.Log(loggingBool, logList, announcement = "Reading directories and files in the listed directories:", dir1 = parentmaindir, dir2 = childbackupdir, dir2Action = ',', log_non_critical=log_non_critical)
 		#Append to the logList
 		logList.extend(newLogList)
-		
+
 		#To add files:
 		for dir in maindirs:
 			if dir not in syncdirs:
@@ -1319,27 +1336,27 @@ class Backup:
 		#To remove files (remove from folder to sync to:)
 		for dir in syncdirs:
 			if dir not in maindirs:
-				
+
 				#Log it:
 				newLogList = Logging.Log(loggingBool, logList, announcement = "Removing extra directories in the backup folder: ", dir1 = parentmaindir, dir2 = childbackupdir, dir1Action = f"File '{file}' not found in", dir2Action = 'but found in backup folder. Removing from backup Folder:', logTag = 'C', log_non_critical=log_non_critical)
 				#Append to the logList
 				logList.extend(newLogList)
 				#If the directory is in the backup directory but not in the main dir, remove the dir from the backup (sync) directory:
 				directory = os.path.join(childbackupdir, dir)
-			
-				
+
+
 				shutil.rmtree(directory)
-		
-		#Remove the file from the 
+
+		#Remove the file from the
 		for file in syncfiles:
 			if file not in mainfiles:
-				
+
 				#Log it:
 				newLogList = Logging.Log(loggingBool, logList, announcement = "Removing any extra files in the backup folder: ", dir1 = parentmaindir, dir2 = childbackupdir, dir1Action = f"File '{file}'not found in", dir2Action = 'but found in backup folder. Adding removing from backup Folder:', logTag = 'C', log_non_critical=log_non_critical)
 				logList.extend(newLogList)
-				
+
 				#If the backup directory has the file but the main one doesn't, remove it from the backup directory:
-				os.remove(os.path.join(childbackupdir, file))	
+				os.remove(os.path.join(childbackupdir, file))
 
 		#Use this to update file content:
 		for file in mainfiles:
@@ -1356,17 +1373,18 @@ class Backup:
 						#Remove and copy the file:
 						os.remove(dirsyncpath)
 						fileOperands.copyFile(maindirpath, os.path.split(dirsyncpath)[0])
-					
+
 						newLogList = Logging.Log(loggingBool, logList, announcement = f"Updating content of file '{file}'", dir1 = dirsyncpath, dir2 = maindirpath, dir1Action = "Updating file content at '", dir2Action = f"' as file '{file}' in backup folder is older than", logTag = 'C', log_non_critical=log_non_critical)
 						logList.extend(newLogList)
-		
+
 		#At the end of the main() function, return the logList
 		return logList
+
 	def mainIteration(maindir, backupdir, loggingBool, log_non_critical = True):
-		
+
 		logList = []
 		for folder, dirs, files in os.walk(maindir):
-			
+
 			childdir = (folder.split(maindir,1)[1])
 			#Replace the first slash:
 			try:
@@ -1380,38 +1398,43 @@ class Backup:
 			#Log it:
 			newLogList = Logging.Log(loggingBool, logList, announcement = "Entering main loop under mainIteration function", dir1 = childdir, dir2 = backUpFullPath, dir1Action = "Merged child path string '", dir2Action = "' into sync path:", log_non_critical=log_non_critical)
 			logList.extend(newLogList)
-			
+
 			#Transfer the newLogList to the main() function:
 
 			logListMain = Backup.main(folder, backUpFullPath, loggingBool, log_non_critical = log_non_critical)
 
 			logList.extend(logListMain)
-		
+
 		#Return the logList, which is the file lines to write:
 		return logList
-	def backup(maindir, backupdirs, loggingBool = False, logCreationPath = '', log_non_critical = True):
+	def backup(maindir, backupdirs, logging_enabled = False, log_path ='', log_non_critical = True):
 		#Initialize the main logList:
-		logList = [] 
-		
-		newLogList = Logging.Log(loggingBool, logList, announcement = "Running in BACKUP mode:", logTag = 'C', log_non_critical=log_non_critical)
-		
+		logList = []
+
+		newLogList = Logging.Log(logging_enabled, logList, announcement ="Running in BACKUP mode:", logTag ='C', log_non_critical=log_non_critical)
+
 		logList.extend(newLogList)
-		
-		
+
 		if isinstance(backupdirs, list) != True:
 			raise Exception("ERR: 'backupdirs' must be of type 'list'")
-		
-		#For every dir within the backup directories, backup:
-		for dir in backupdirs:
-			if len(backupdirs) > 1:
-				newLog = Logging.Log(loggingBool, logList, announcement = f"Multiple Directories were given. Now, backing up to directory: {dir}", log_non_critical=log_non_critical)
-				logList.extend(newLog)
-			newLogList = Backup.mainIteration(maindir, dir, loggingBool, log_non_critical=log_non_critical)
-			logList.extend(newLogList)
-		#Write the logs:
-		
-		if loggingBool == True:
-			Logging.writeLogsToFile(logCreationPath, logList, 'backup')
+
+		try:
+			#For every dir within the backup directories, backup:
+			for dir in backupdirs:
+				if len(backupdirs) > 1:
+					newLog = Logging.Log(logging_enabled, logList, announcement =f"Multiple Directories were given. Now, backing up to directory: {dir}", log_non_critical=log_non_critical)
+					logList.extend(newLog)
+				newLogList = Backup.mainIteration(maindir, dir, logging_enabled, log_non_critical=log_non_critical)
+				logList.extend(newLogList)
+			#Write the logs:
+
+			if logging_enabled == True:
+				Logging.writeLogsToFile(log_path, logList, 'backup')
+
+			print("Backup completed successfully.")
+
+		except Exception as e:
+			print(f"Backup failed: {str(e)}")
 	def backgroundBackup(maindir, backupdirs, loggingBool = False, logCreationPath = '', refreshInterval = 8, log_non_critical = True):
 
 		#Now, implement logging in the synchronization algorithm.
@@ -1422,9 +1445,9 @@ class Backup:
 				newLogList = Logging.Log(loggingBool, logList, announcement = "Running in BACKGROUNDBACKUP mode:", logTag = 'C', log_non_critical=log_non_critical)
 				logList.extend(newLogList)
 				modeAnnounced = True
-			
+
 			for dir in backupdirs:
-				
+
 				if len(backupdirs) > 1:
 					newLog = Logging.Log(loggingBool, logList, announcement = f"Multiple Directories were given. Now, backing up to directory: {dir}", log_non_critical=log_non_critical)
 					logList.extend(newLog)
@@ -1434,7 +1457,7 @@ class Backup:
 			if loggingBool == True:
 				Logging.writeLogsToFile(logCreationPath, logList, 'backgroundBackup')
 			time.sleep(refreshInterval)
-			
+
 #Call a bash/shell script:
 class callBash:
 	def runFile(path, editPermissions = False):
