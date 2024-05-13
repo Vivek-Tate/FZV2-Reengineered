@@ -61,68 +61,33 @@ class GatherInfo:
 	
     #New in V2:
     #New function in V2:
-	def isEmptyDir(dir):
-		directories, files = GatherInfo.readDir(dir)
-		if len(directories) == 0 and len(files) == 0:
-			return True
-		else:
-			return False
+	def isEmptyDir(directory):
+		directories, files = GatherInfo.readDir(directory)
+		return len(directories) == 0 and len(files) == 0
+
 	#New in V2:
 	def computeHash(path):
-		h = hashlib.sha1()
-		#Add try except block (to avoid duplicate directory errors in Synchronize class
 		try:
-			file = open(path, 'rb')
-
-			file_size = os.path.getsize(path)
-			# If the file is not empty, compute the hash:
-			if file_size > 0:
-				chunk = 0
-				while chunk != b'':
-						chunk = file.read(1024)
-						h.update(chunk)	
-				return h.hexdigest()
-			else:
-				#Return false if the file is empty. In other words, skip the file:
-				return False
+			with open(path, 'rb') as file:
+				h = hashlib.sha1()
+				for chunk in iter(lambda: file.read(1024), b''):
+					h.update(chunk)
+				return h.hexdigest() if os.path.getsize(path) > 0 else False
 		except:
-			#Return False if unhashable
 			return False
     
     #New in V2: Comparing two lists for at least one common element:
 	def isOneInCommon(list1, list2):
-		result = False
-	
-		for x in list1:
-	
-			for y in list2:
+		return any(x == y for x in list1 for y in list2)
 
-				#Compare the two results:
-				if x == y:
-					result = True
-					return result
-		#Return false if not matching:
-		return result
+	def readDir(directory, return_files=True, return_directories=True):
+		all_files = GatherInfo.getAllFileNamesinDir(directory)
+		directories = [file for file in all_files if os.path.isdir(os.path.join(directory, file))]
+		files = [file for file in all_files if not os.path.isdir(os.path.join(directory, file))]
 
-	def readDir(dir, returnFiles = True, returnDirectories = True):
-		dir1files = GatherInfo.getAllFileNamesinDir(dir)
-		
-		directories = []
-		files = []
-
-		for file in dir1files:
-			fullpath = os.path.join(dir, file)
-			if os.path.isdir(fullpath) == True:
-				directories.append(file)
-			else:
-				files.append(file)
-
-		if returnFiles == False:
-			return directories
-		elif returnDirectories == False:
-			return files
-		else:
-			return directories, files
+		return (directories, []) if not return_files else (
+			[] if not return_directories else (directories, [])) if not return_directories else (
+		[], files) if not return_files else (directories, files)
 
 	def isRegexAndStringMatching(pattern, string, exactMatch = False):
 		matched = False
@@ -140,71 +105,39 @@ class GatherInfo:
 		return matched
 
 	#Get total amount of lines recusrively in a directory, and optionally even files.
-	def getTotalInfo(path, returnFileAmount = False, extensionFilters = [], recursive = False):
-		totalamount = 0
-		fileAmount = 0
+	def getTotalInfo(path, return_file_amount=False, extension_filters=[], recursive=False):
+		total_amount = file_amount = 0
 
-		if recursive == True:
-			for folder, dirs, files in os.walk(path):
-				for file in files:
-					
-					#If there are extension filters, execute:
-					matchesExtension = False
-					#For each extension:
-					for extension in extensionFilters:
-						if file.endswith(extension):
-							matchesExtension = True
-							break
-					#Either there are no file extensions, or, if there are, check if the file ends with the extension:
-					if (len(extensionFilters) == 0) or matchesExtension == True:
-						fileAmount += 1
-						filepath = os.path.join(folder, file)
-						try:
-							totalamount += GatherInfo.getFileLineAmount(filepath)
-						except UnicodeDecodeError:
-							pass
-		else:
-			files = GatherInfo.readDir(path, returnDirectories = False)
+		def process_file(file_path):
+			nonlocal total_amount, file_amount
+			try:
+				total_amount += GatherInfo.getFileLineAmount(file_path)
+				file_amount += 1
+			except UnicodeDecodeError:
+				pass
 
+		def matches_extension(file):
+			return any(file.endswith(extension) for extension in extension_filters)
+
+		for folder, _, files in os.walk(path) if recursive else [
+			(path, None, GatherInfo.readDir(path))]:
 			for file in files:
-				#If there are extension filters, execute:
-					matchesExtension = False
-					#For each extension:
-					for extension in extensionFilters:
-						if file.endswith(extension):
-							matchesExtension = True
-					
-					#Either there are no file extensions, or, if there are, check if the file ends with the extension:
-					if (len(extensionFilters) == 0) or matchesExtension == True:
-						fileAmount += 1
-						filepath = os.path.join(path, file)
-						try:
-							totalamount += GatherInfo.getFileLineAmount(filepath)
-						except UnicodeDecodeError:
-							pass
+				if not extension_filters or matches_extension(file):
+					process_file(os.path.join(folder, file))
 
-		if returnFileAmount == True:
-			return totalamount, fileAmount
-		else:
-			return totalamount
+		return (total_amount, file_amount) if return_file_amount else total_amount
 		
 	#New in 2.0.4
-	def compareFiles(file1, file2, comparison_output_file = ''):
+	def compareFiles(file1, file2, comparison_output_file=''):
 		with open(file1, 'r') as f1, open(file2, 'r') as f2:
-			f1_lines = f1.readlines()
-			f2_lines = f2.readlines()
-			output_lines = []
-			for i, (line1, line2) in enumerate(zip(f1_lines, f2_lines)):
-				if line1 != line2:
-					difference = f"\nLine {i+1}:\nFile1: {line1} File2: {line2}\n"
-					print(difference)
-					output_lines.append(difference)
-		if comparison_output_file != '':
-			f = open(comparison_output_file)
-			f.writelines(output_lines)
-			f.close()
-		return output_lines
-	
+			differences = [f"\nLine {i + 1}:\nFile1: {line1} File2: {line2}\n" for i, (line1, line2) in
+						   enumerate(zip(f1, f2)) if line1 != line2]
+
+		if comparison_output_file:
+			with open(comparison_output_file, 'w') as f:
+				f.writelines(differences)
+
+		return differences
 
 	# New functions (GatherInfo):
 	def wordCount(string): return len(string.split())

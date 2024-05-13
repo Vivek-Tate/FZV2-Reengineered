@@ -53,7 +53,7 @@ class GatherInfoTest(unittest.TestCase):
 
     def test_getTotalInfo(self):
         directory_path = r'Testing-FinderZ/tp.txt'
-        actual_file = GatherInfo.getTotalInfo(directory_path, 'int', extensionFilters=['.txt'], recursive=True)
+        actual_file = GatherInfo.getTotalInfo(directory_path, 'int', recursive=True)
         print(actual_file)
 
     def test_compareFiles(self):
