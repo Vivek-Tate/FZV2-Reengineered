@@ -6,6 +6,7 @@ import time
 import subprocess
 import hashlib
 import re
+import zipfile
 import random
 
 class GatherInfo:
@@ -242,509 +243,264 @@ class GatherInfo:
 		for i in range(len(extensions)):
 			extensions_dict[extensions[i]] = amounts[i]
 		return extensions_dict
-		
+
+class FileUtils:
+    @staticmethod
+    def get_matching_files(fileName, files, regex=False, exactSearch=False):
+        matching_files = []
+        for file in files:
+            if regex:
+                if GatherInfo.isRegexAndStringMatching(fileName, file, exactMatch=exactSearch):
+                    matching_files.append(file)
+            else:
+                if (exactSearch and fileName == file) or (not exactSearch and fileName in file):
+                    matching_files.append(file)
+        return matching_files
+
+    @staticmethod
+    def get_files_with_extension(files, extensionFilters):
+        if not extensionFilters:
+            return files
+        return [file for file in files if any(file.endswith(ext) for ext in extensionFilters)]
+
+    @staticmethod
+    def process_files_in_dir(path, recursive, process_func):
+        for root, _, files in os.walk(path):
+            process_func(root, files)
+            if not recursive:
+                break
+
 class fileOperands:
-	#New recursive option to find files containing a global keyword, and new exactSearch function to replace the whole findFile funtion:
-	def findFiles(fileName, path, exactSearch = False, recursive = False, regex = False):
-		#Main results list to return at the end:
-		results = []
-		
-		if recursive == True:
-			for root, dirs, files in os.walk(path):
-				files = ' '.join(files)
-				if (fileName in files) or (regex == True):
+    @staticmethod
+    def findFiles(fileName, path, exactSearch=False, recursive=False, regex=False):
+        results = []
 
-					mainFileDir = os.path.join(root)
-					allFiles = GatherInfo.getAllFileNamesinDir(mainFileDir)
-					amountFilesInDir = GatherInfo.getResultsAmount(allFiles)
-					iterator = 0
-					for i in range(amountFilesInDir):
-						finder = allFiles[iterator]
-						stringed = str(''.join(finder))
+        def process_func(root, files):
+            matching_files = FileUtils.get_matching_files(fileName, files, regex, exactSearch)
+            for file in matching_files:
+                results.append(os.path.join(root, file))
 
-						#Exact search parameter to decide whether or not the given keyWord is exact or within the file name to search for:
+        FileUtils.process_files_in_dir(path, recursive, process_func)
+        return results
 
-						#Check if the user wants to use regex or not:
-						if regex == True:
-							if GatherInfo.isRegexAndStringMatching(fileName, stringed, exactMatch = exactSearch):
-								
-								results.append(os.path.join(root, stringed))
-						else:
-							if exactSearch == True:
-								
-								if fileName == stringed:
-									results.append(os.path.join(root, stringed))
-							else:
-								if fileName in stringed:
-									results.append(os.path.join(root, stringed))
-							
-						iterator += 1
-			
-		#Else, defaults to single directory that is non-recursive:
-		else:
-			#Get all the files in the given directory:
-			allFiles = GatherInfo.readDir(path, returnDirectories = False)
-			#Get the amount of files in the directory:
-			amountFilesInDir = GatherInfo.getResultsAmount(allFiles)
-			#iterate and check if any of the elements in the gathered list of files have a matching keyword:
-			for i in range(amountFilesInDir):
-				#Exact search parameter to decide whether or not the given keyWord is exact or within the file name to search for:
+    @staticmethod
+    def scanFilesForContent(contentKeyWord, path, extensionFilters=[], recursive=False, regex=False):
+        results = []
 
-				#Check if user wants to use regex or not:
-				if regex == True:
-					if GatherInfo.isRegexAndStringMatching(fileName, allFiles[i], exactMatch = exactSearch):
-						foundFilePath = os.path.join(path, allFiles[i])
-						results.append(foundFilePath)
-				
-				else:
-					if exactSearch == True:
-						if fileName == str(allFiles[i]):
-							foundFilePath = os.path.join(path, allFiles[i])
-						#Append the value:
-							results.append(foundFilePath)
-					else:
-						if fileName in str(allFiles[i]):
-							foundFilePath = os.path.join(path, allFiles[i])
-						#Append the value:
-							results.append(foundFilePath)
-		return results
-	
-	#Scan files for content (fileExtension defaults to 'all', but a specific file extension can also be used):
-	def scanFilesForContent(contentKeyWord, path, extensionFilters = [], recursive = False, regex = False):
-		#The resulting files that were found:
-		results = []
+        def process_func(root, files):
+            filtered_files = FileUtils.get_files_with_extension(files, extensionFilters)
+            for file in filtered_files:
+                file_path = os.path.join(root, file)
+                try:
+                    with open(file_path, 'r') as f:
+                        lines = f.readlines()
+                        for line in lines:
+                            if (regex and GatherInfo.isRegexAndStringMatching(contentKeyWord, line)) or (contentKeyWord in line):
+                                results.append(file_path)
+                                break
+                except:
+                    pass
 
-		if recursive == True:
-			for folder, dirs, files in os.walk(path):
-				for file in files:
-					fullpath = os.path.join(folder, file)
-					
-					#Check the extensionFilters list:
-					matchingExtension = False
-					for extension in extensionFilters:
-						if file.endswith(extension):
-							matchingExtension = True
-							break
+        FileUtils.process_files_in_dir(path, recursive, process_func)
+        return results
 
-					if (len(extensionFilters) == 0) or (matchingExtension == True):
-						try:
-							with open(fullpath, 'r') as f:
-								for line in f:
-									#Check if the user wants to use regex or not:
-									if regex == True:
-										if GatherInfo.isRegexAndStringMatching(contentKeyWord, line):
-											results.append(fullpath)
-									else:
-										if contentKeyWord in line:
-											results.append(fullpath)
-						except:
-							pass
-		else:
-			#Get all the files in the given directory:
-			allFiles = GatherInfo.getAllFileNamesinDir(path)
-			#Get the amount of files in the directory:
-			amountFilesInDir = GatherInfo.getResultsAmount(allFiles)
-			#iterate and check if any of the elements in the gathered list of files have a matching keyword:
-			for i in range(amountFilesInDir):
-				file = allFiles[i]
-				filePath = os.path.join(path, file)
-				
-				#Check the extensionFilters list:
-				matchingExtension = False
-				for extension in extensionFilters:
-					if file.endswith(extension):
-						matchingExtension = True
-						break
-				
-				if (len(extensionFilters) == 0) or matchingExtension == True:
-					#Check whether or not the file is readable:
-					try:
-						lineContent = GatherInfo.getFileLineContents(filePath)
-						lineAmount = len(lineContent)
-						for lines in range(lineAmount):
-							line = str(lineContent[lines])
+    @staticmethod
+    def removeFiles(fileName, path, exactSearch=False, extensionFilters=[], recursive=False, regex=False):
+        results = []
 
-							#Check if the user wants to use regex or not:
-							if regex == True:
-								if GatherInfo.isRegexAndStringMatching(contentKeyWord, line):
-									results.append(filePath)
-							else:
-								if contentKeyWord in line:
-									results.append(filePath)
-					except: 
-						pass
-				#Return the main list containing all the directories of the files that include the specific keyword:
-		return results
-	
-	#Removing files:
-	def removeFiles(fileName, path, exactSearch = False, extensionFilters = [], recursive = False, regex = False):
-		result = []
-		removeCheck = int(0)
-		if recursive == True:
-			for root, dirs, files in os.walk(path):
-				files = ' '.join(files)
-				if (fileName in files) or (regex == True):
-					
-					mainFileDir = os.path.join(root)
-					allFiles = GatherInfo.getAllFileNamesinDir(mainFileDir)
-					amountFilesInDir = GatherInfo.getResultsAmount(allFiles)
-					
-					for i in range(amountFilesInDir):
-						found = False
-						finder = allFiles[i]
-						stringed = str(''.join(finder))
-						
-						#extensionFilters:
-						matchingExtension = False
-						for extension in extensionFilters:
-							if stringed.endswith(extension):
-								matchingExtension =True
-								break
-						
-						if (len(extensionFilters) == 0) or matchingExtension == True:
-							#Check if the user wants to use regex or not:
-							if regex == True:
-								if GatherInfo.isRegexAndStringMatching(fileName, stringed, exactMatch = exactSearch):
-									directory = os.path.join(root, stringed)
-									result.append(directory)
-									found = True
-							else:
-								if exactSearch == True:
-									if fileName == stringed:
-										directory = os.path.join(root, stringed)
-										result.append(directory)
-										found = True
-								else:
-									if fileName in stringed:
-										directory = os.path.join(root, stringed)
-										result.append(directory)
-										found = True
-								
-							#Disclaimers and warnings (Optional, just there for user experience):
-							if found == True:	
-								print("\n File Found at:\n" + directory)
-								warning = "\nYou are about to delete this file. Continue? ((1) Yes / (2) No): "
-								
-								agreement = int(input(warning))
-								
-								if agreement == 1:
-									os.remove(directory)
-									print("\nRemoved 1 File")
-									removeCheck = 1
-		else:
-			#Get all the list of files:
-			allFiles = GatherInfo.getAllFileNamesinDir(path)
-			amountFilesInDir = GatherInfo.getResultsAmount(allFiles)
-			
-			for i in range(amountFilesInDir):
-				found = False
-				finder = allFiles[i]
-				stringed = str(''.join(finder))
+        def process_func(root, files):
+            filtered_files = FileUtils.get_files_with_extension(files, extensionFilters)
+            matching_files = FileUtils.get_matching_files(fileName, filtered_files, regex, exactSearch)
+            for file in matching_files:
+                file_path = os.path.join(root, file)
+                results.append(file_path)
+                print(f"\n File Found at:\n{file_path}")
+                if int(input("\nYou are about to delete this file. Continue? ((1) Yes / (2) No): ")) == 1:
+                    os.remove(file_path)
+                    print("\nRemoved 1 File")
 
-				#extensionFilters:
-				matchingExtension = False
-				for extension in extensionFilters:
-					if stringed.endswith(extension):
-						matchingExtension = True
-						break
+        FileUtils.process_files_in_dir(path, recursive, process_func)
+        if results:
+            print(f"\nAll selected files with keyword '{fileName}' successfully removed.")
+        else:
+            print(f"\nNo files removed or found with the keyword '{fileName}'")
 
-				if (len(extensionFilters) == 0) or matchingExtension == True:
-					if regex == True:
-						if GatherInfo.isRegexAndStringMatching(fileName, stringed, exactMatch = exactSearch):
-							directory = os.path.join(path, stringed)
-							result.append(directory)
-							found = True
-					else:
-						if exactSearch == True:
-							if fileName == stringed:
-								directory = os.path.join(path, stringed)
-								result.append(directory)
-								found = True
-						else:
-							if fileName in stringed:
-								directory = os.path.join(path, stringed)
-								result.append(directory)
-								found = True
-								
-					#Disclaimers and warnings (Optional, just there for user experience and security):
-					if found == True:	
-						print("\n File Found at:\n" + directory)
-						warning = "\nYou are about to delete this file. Continue? ((1) Yes / (2) No): "
-						
-						agreement = int(input(warning))
-						
-						if agreement == 1:
-							os.remove(directory)
-							print("\nRemoved 1 File")
-							removeCheck = 1
-				
-		if removeCheck == 1:
-			print(f"\nAll selected files with keyword '{fileName}' successfully removed.")
-		elif removeCheck != 1:
-			print(f"\nNo files removed or found with the keyword '{fileName}'")
-	
-    #Create files with a keyword for testing purposes:
-	def createFiles(createAmount, keyWord, extensionType, path, firstFileStartsAtOne = False):
-		originalDir = os.getcwd()
-		os.chdir(path)
-		numExtension = 1
-		for i in range(createAmount):
-			
-			if numExtension == 1 and firstFileStartsAtOne == False:
-				numExtension = str(numExtension)
-				f = open(keyWord + extensionType, 'w')
-			else:
-				numExtension = str(numExtension)
-				f = open(keyWord + numExtension + extensionType, 'w')
-			f.close()
-			numExtension = int(numExtension)
-			numExtension += 1
-		# Return into original directory once complete:
-		os.chdir(originalDir)
+    @staticmethod
+    def createFiles(createAmount, keyWord, extensionType, path, firstFileStartsAtOne=False):
+        originalDir = os.getcwd()
+        os.chdir(path)
+        for i in range(createAmount):
+            numExtension = str(i + 1) if firstFileStartsAtOne or i > 0 else ''
+            file_name = f"{keyWord}{numExtension}{extensionType}"
+            with open(file_name, 'w'):
+                pass
+        os.chdir(originalDir)
 
-	#Recursively find and replace file content(Dangerous if not used correctly!):
-	def findAndReplaceInFiles(keyWord, replacementKeyword, path, recursive = True):
-		#Scan for files:
-		if recursive == True:
-			for folder, dirs, files in os.walk(path):
-				for file in files:
+    @staticmethod
+    def findAndReplaceInFiles(keyWord, replacementKeyword, path, recursive=True):
+        def process_func(root, files):
+            for file in files:
+                file_path = os.path.join(root, file)
+                try:
+                    with open(file_path, 'r') as f:
+                        lines = f.readlines()
+                    new_lines = [line.replace(keyWord, replacementKeyword) for line in lines]
+                    if lines != new_lines:
+                        with open(file_path, 'w') as f:
+                            f.writelines(new_lines)
+                except:
+                    pass
 
-					Check = False
-					readable = False
-					fullpath = os.path.join(folder, file)
+        FileUtils.process_files_in_dir(path, recursive, process_func)
 
-					#Read the lines:
-					try:
-						#Open the file and start scanning:
-						fileObject = open(fullpath, 'r')
-						fileLines = fileObject.readlines()
-						readable = True
-					except UnicodeDecodeError:
-						pass
-					#Get the line amount:
-					if readable == True:
-						
-						
-						for i in range(len(fileLines)):
-							#Line location
-							
-							#Check if the keyword is in the lineCount:
-							if keyWord in fileLines[i]:
-								Check = True
-								
-								#Get the info in that line.
-								foundLocation = fileLines[i]
-								
-								#Replace the word in the line with the new word.
-								replacement = foundLocation.replace(keyWord, replacementKeyword)
-								
-								#Set the line equal to the new value:
-								fileLines[i] = replacement
-							
-						#If the check is True, write the file, else, go back to loop and scan for other files.
-						if Check == True:
-							f = open(fullpath, 'w')
-							f.writelines(fileLines)
-		else:
-			#Get all the file names in a list:
-			files = GatherInfo.readDir(path, returnDirectories = False)
+    @staticmethod
+    def mergeClassFolders(parentClassPath, mergeDestination, removeOriginal=False):
+        directories, _ = GatherInfo.readDir(parentClassPath)
+        for directory in directories:
+            directory_path = os.path.join(parentClassPath, directory)
+            _, files = GatherInfo.readDir(directory_path)
+            for file in files:
+                source_path = os.path.join(directory_path, file)
+                if removeOriginal:
+                    shutil.move(source_path, mergeDestination)
+                else:
+                    shutil.copy(source_path, mergeDestination)
 
-			for file in files:
-				Check = False
-				readable = False
-				filePath = os.path.join(path, file)
-				try:
-					contents = GatherInfo.getFileLineContents(filePath)
-					readable = True
-				except UnicodeDecodeError:
-					readable = False
+    @staticmethod
+    def moveFile(originalFileDir, newFileDir):
+        shutil.move(originalFileDir, newFileDir)
 
-				if readable == True:
-					#Scan the 
-					for i in range(len(contents)):
-						if keyWord in contents[i]:
-							Check = True
-							#replace:
-							contents[i] = contents[i].replace(keyWord, replacementKeyword)
-					
-				if Check == True:
-					f = open(filePath, 'w')
-					f.writelines(contents)
-		
-	#New version of insert text in file function! (Works very well now unlike pervious version).
-	def insertTextInFile(insertionText, lineNumber, filePath, appendNewLines = False):
-		#Check if the lineNumber is valid:
-		if lineNumber < 1:
-			raise Exception("ERR: Line number can not be less than 1")
-		#Main file to open:
-		try:
-			lineContent = GatherInfo.getFileLineContents(filePath)
-		except:
-			raise Exception("ERR: The file seems to be un-decodable.")
-		
-		if lineNumber > len(lineContent) and appendNewLines == False:
-			raise Exception("ERR: Greater lineNumber value than actual file line amount (Perhaps consider setting 'appendNewLines' to True)")
-		#Init appendation of placeholder:
-		if lineNumber != len(lineContent):
-			lineContent.append('')
-		#Appendation of new lines algo:
-		if appendNewLines == True and lineNumber > (len(lineContent)-1):
-			#Append new lines:
-			for i in range(len(lineContent)):
-				if '\n' not in lineContent[i]:
-					lineContent[i] = lineContent[i] + "\n"
-			 
-			#lineContent[-1:][0] = lineContent[-1:][0] + "\n"
-			while len(lineContent) != (lineNumber):
-				lineContent.append("\n")
-			lineContent[lineNumber-1] =  insertionText
-		#Normal algo that may include everything:
-		else:
-			if lineNumber == len(lineContent):
-				lineContent[lineNumber-1] = lineContent[lineNumber-1] + insertionText
-			elif lineNumber < len(lineContent):
-				lineContent[lineNumber-1] = lineContent[lineNumber-1].replace("\n", '') + insertionText + "\n"
-		
-		#Write to the file:
-		f = open(filePath,'w')
-		f.writelines(lineContent)
+    @staticmethod
+    def copyFile(originalFileDir, newFileDir):
+        shutil.copy(originalFileDir, newFileDir)
 
-		# Multiple class folders merging (useful for ML data preprocessing)
-	def mergeClassFolders(parentClassPath, mergeDestination, removeOriginal = False):
-		# Get the dirs:
-		dirs = GatherInfo.readDir(parentClassPath, returnFiles = False)
-		# Iterate through each folder in the parentClassPath:
-		for folder in dirs:
-			# Get the path of the folder:
-			folder_path = os.path.join(parentClassPath, folder)
-			# Get the files:
-			files = GatherInfo.readDir(folder_path, returnDirectories = False)
-			#Iterate through each file in the folder:
-			for file in files:
-				if removeOriginal == False:
-					fileOperands.copyFile(os.path.join(folder_path, file), mergeDestination)
-				else:
-					try:
-						fileOperands.moveFile(os.path.join(folder_path, file), mergeDestination)
-					except shutil.Error:
-						print(f"File \"{os.path.join(mergeDestination, file)}\" already existed before moving file.")
+    @staticmethod
+    def moveDir(originalDir, newDir):
+        shutil.move(originalDir, newDir)
 
-	def moveFile(originalFileDir, newFileDir):
-		shutil.move(originalFileDir, newFileDir)
-		return True
-	def copyFile(originalFileDir, newFileDir):
-		shutil.copy(originalFileDir, newFileDir)
-		return True
-	
-	#For dealing with directories:
-	
-	#Used to move a directory:
-	def moveDir(originalDir, newDir):
-		shutil.move(originalDir, newDir)
-		return True
+    @staticmethod
+    def copyDir(originalDir, newDir):
+        shutil.copytree(originalDir, os.path.join(newDir, os.path.basename(originalDir)))
 
-	#More reliable functions (reduces chance of directory problems):
-	def copyDir(originalDir, newDir):
-			lastdir = os.path.basename(os.path.normpath(originalDir))
-			newDirectory = os.path.join(newDir, lastdir)
-			shutil.copytree(originalDir, newDirectory)
-			return True
-	def renameFile(newName, filePath):
-		#Remove any slash marks:
-		newFilePath = os.path.dirname(filePath)
-		os.rename(filePath, os.path.join(newFilePath,newName))
-		
-	def renameDirectory(newName, directoryPath):
-		newDirectoryPath = os.path.dirname(os.path.dirname(directoryPath))
-		os.rename(directoryPath, os.path.join(newDirectoryPath, newName))
-		
-     #Create a single file:
-	def createFile(fileName, path):
-		os.chdir(path)
-		f = open(fileName, 'w')
-		f.close()
-	#Remove a single file:
-	def removeFile(filePath):
-		os.remove(filePath)
+    @staticmethod
+    def renameFile(newName, filePath):
+        os.rename(filePath, os.path.join(os.path.dirname(filePath), newName))
 
-	
-	# New in V 2.1.2 (These functions below are all new in V 2.1.2)
-	def removeAllFilesInDir(dir, removeDirectories = False):
-		directories, files = GatherInfo.readDir(dir)
-		for file in files:
-			filePath = os.path.join(dir, file)
-			os.remove(filePath)
-		#Check whether or not the user wants to remove the directories along side the files:
-		if removeDirectories == True:
-			for directory in directories:
-				directoryPath = os.path.join(dir, directory)
-				shutil.rmtree(directoryPath)
+    @staticmethod
+    def renameDirectory(newName, directoryPath):
+        os.rename(directoryPath, os.path.join(os.path.dirname(directoryPath), newName))
 
-	# New XOR encryption functions:
-	def xor_encrypt_file(file_path, key, removeOriginal = False):
-		hashed_key = hashlib.sha256(str(key).encode()).digest()[0]
+    @staticmethod
+    def createFile(fileName, path):
+        with open(os.path.join(path, fileName), 'w'):
+            pass
 
-		with open(file_path, 'rb') as f:
-			data = f.read()
+    @staticmethod
+    def removeFile(filePath):
+        os.remove(filePath)
 
-		encrypted_data = bytearray(b ^ hashed_key for b in data)  # XOR with hashed_key, not key
+    @staticmethod
+    def removeAllFilesInDir(dir, removeDirectories=False):
+        directories, files = GatherInfo.readDir(dir)
+        for file in files:
+            os.remove(os.path.join(dir, file))
+        if removeDirectories:
+            for directory in directories:
+                shutil.rmtree(os.path.join(dir, directory))
 
-		enc_file_path = file_path + '.enc'
-		with open(enc_file_path, 'wb') as f:
-			f.write(encrypted_data)
-		
-		if removeOriginal == True:
-			os.remove(file_path)
+    @staticmethod
+    def xor_encrypt_file(file_path, key, removeOriginal=False):
+        hashed_key = hashlib.sha256(str(key).encode()).digest()[0]
+        with open(file_path, 'rb') as f:
+            data = f.read()
+        encrypted_data = bytearray(b ^ hashed_key for b in data)
+        enc_file_path = file_path + '.enc'
+        with open(enc_file_path, 'wb') as f:
+            f.write(encrypted_data)
+        if removeOriginal:
+            os.remove(file_path)
 
-	def xor_decrypt_file(enc_file_path, key, removeEncrypted = False):
-		hashed_key = hashlib.sha256(str(key).encode()).digest()[0]
-		
-		with open(enc_file_path, 'rb') as f:
-			data = f.read()
+    @staticmethod
+    def xor_decrypt_file(enc_file_path, key, removeEncrypted=False):
+        hashed_key = hashlib.sha256(str(key).encode()).digest()[0]
+        with open(enc_file_path, 'rb') as f:
+            data = f.read()
+        decrypted_data = bytearray(b ^ hashed_key for b in data)
+        file_path = enc_file_path.replace('.enc', '')
+        with open(file_path, 'wb') as f:
+            f.write(decrypted_data)
+        if removeEncrypted:
+            os.remove(enc_file_path)
 
-		decrypted_data = bytearray(b ^ hashed_key for b in data)  # XOR with hashed_key, not key
+    @staticmethod
+    def xor_encrypt_files(dir, key, removeOriginal=False, recursive=False):
+        def process_func(root, files):
+            for file in files:
+                file_path = os.path.join(root, file)
+                fileOperands.xor_encrypt_file(file_path, key, removeOriginal)
 
-		file_path = enc_file_path.replace('.enc', '')
-		with open(file_path, 'wb') as f:
-			f.write(decrypted_data)
+        FileUtils.process_files_in_dir(dir, recursive, process_func)
 
-		if removeEncrypted == True:
-			os.remove(enc_file_path)
-	
-	# Functions that recursivly encrypt/decrypt files
-	def xor_encrypt_files(dir, key, removeOriginal = False, recursive = False):
-		counter = 0
-		for root, dir, files in os.walk(dir):
-			if recursive == False and counter != 0:
-				break
-			for file in files:
-				file_path = os.path.join(root, file)
-				fileOperands.xor_encrypt_file(file_path, key, removeOriginal=removeOriginal)
-			counter += 1
-	
-	# Note: This function only takes into account files that end with .enc
-	def xor_decrypt_files(dir, key, removeEncrypted = False, recursive = False):
-		counter = 0
-		for root, dir, files in os.walk(dir):
-			if recursive == False and counter != 0:
-				break
-			for file in files:
-				if file.endswith(".enc"):
-					file_path = os.path.join(root, file)
-					fileOperands.xor_decrypt_file(file_path, key, removeEncrypted = removeEncrypted)
-			counter += 1
-	# Removes all .enc files in a directory recursively:
-	def removeEncFiles(dir, recursive = False):
-		counter = 0
-		for root, dir, files in os.walk(dir):
-			if recursive == False and counter != 0:
-				break
-			for file in files:
-				if file.endswith(".enc"):
-					file_path = os.path.join(root, file)
-					os.remove(file_path)
-			counter += 1
-		
+    @staticmethod
+    def xor_decrypt_files(dir, key, removeEncrypted=False, recursive=False):
+        def process_func(root, files):
+            for file in files:
+                if file.endswith('.enc'):
+                    file_path = os.path.join(root, file)
+                    fileOperands.xor_decrypt_file(file_path, key, removeEncrypted)
+
+        FileUtils.process_files_in_dir(dir, recursive, process_func)
+
+    @staticmethod
+    def removeEncFiles(dir, recursive=False):
+        def process_func(root, files):
+            for file in files:
+                if file.endswith('.enc'):
+                    os.remove(os.path.join(root, file))
+
+        FileUtils.process_files_in_dir(dir, recursive, process_func)
+
+    @staticmethod
+    def calculateFileSize(filePath):
+        return os.path.getsize(filePath)
+
+    @staticmethod
+    def calculateDirectorySize(directory):
+        total_size = 0
+        for dirpath, _, filenames in os.walk(directory):
+            for f in filenames:
+                fp = os.path.join(dirpath, f)
+                total_size += os.path.getsize(fp)
+        return total_size
+
+    @staticmethod
+    def backupFiles(files, backupDir):
+        if not os.path.exists(backupDir):
+            os.makedirs(backupDir)
+        for file in files:
+            shutil.copy(file, backupDir)
+
+    @staticmethod
+    def restoreFiles(backupDir, restoreDir):
+        if not os.path.exists(backupDir):
+            raise Exception(f"Backup directory {backupDir} does not exist")
+        if not os.path.exists(restoreDir):
+            os.makedirs(restoreDir)
+        for file in os.listdir(backupDir):
+            shutil.copy(os.path.join(backupDir, file), restoreDir)
+
+    @staticmethod
+    def compressFiles(files, zipName):
+        with zipfile.ZipFile(zipName, 'w') as zipf:
+            for file in files:
+                zipf.write(file, os.path.basename(file))
+
+    @staticmethod
+    def decompressFiles(zipFilePath, extractDir):
+        with zipfile.ZipFile(zipFilePath, 'r') as zipf:
+            zipf.extractall(extractDir)
+
+
 #The main logging class (Used in Synchronize and Backup classes)
 class Logging:
 	#Here, the announcement is simply something to announce/thecurrent/main activity or in this case print. dir is the parameter that takes in dir. dirAction consists of things like removing, adding, or copying, renaming, etc.
