@@ -14,6 +14,10 @@ class GatherInfoTest(unittest.TestCase):
         expected_filenames = ['backup_dir', 'empty.txt', 'helloworld.bat', 'New-test-dir', 'Now.txt', 'tp.txt']
         actual_filenames = GatherInfo.getAllFileNamesinDir(directory_path)
 
+        # Sort the lists to ensure the order doesn't matter
+        expected_filenames.sort()
+        actual_filenames.sort()
+
         self.assertEqual(expected_filenames, actual_filenames)
 
     def test_getFileLineContents(self):
