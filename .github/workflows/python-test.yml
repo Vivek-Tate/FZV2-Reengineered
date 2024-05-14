@@ -27,18 +27,25 @@ jobs:
 
     - name: Install dependencies
       run: |
-        cd FinderZ/src
         python -m pip install --upgrade pip
-        pip install -e .
         pip install pytest
         pip install setuptools
 
-    - name: Run tests
+    - name: Install package
       run: |
         cd FinderZ/src
-        pytest ../tests/GatherInfoTest.py
-        pytest ../tests/FileOperationsTest.py
-        pytest ../tests/LoggingTest.py
-        pytest ../tests/SynchronizeTest.py
-        pytest ../tests/CallBashTest.py
-        pytest ../tests/BackupTest.py
+        pip install -e .
+
+    - name: Set PYTHONPATH
+      run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)/FinderZ/src" >> $GITHUB_ENV
+
+    - name: Run tests
+      run: |
+        pytest FinderZ/tests/GatherInfoTest.py
+        pytest FinderZ/tests/FileOperationsTest.py
+        pytest FinderZ/tests/LoggingTest.py
+        pytest FinderZ/tests/SynchronizeTest.py
+        pytest FinderZ/tests/CallBashTest.py
+        pytest FinderZ/tests/BackupTest.py
+      env:
+        PYTHONPATH: ${{ env.PYTHONPATH }}
