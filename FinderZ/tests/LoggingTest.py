@@ -1,6 +1,6 @@
 import pytest
 import os
-from FinderZV2 import Logging, writeLogsToFile
+from FinderZV2 import Logging
 
 
 # Define the fixture here
@@ -32,7 +32,7 @@ def test_writeLogsToFile(tmpdir):
     fileLines = ["Test log"]
     mode = "Test mode"
 
-    writeLogsToFile(str(creationPath), fileLines, mode)
+    Logging.writeLogsToFile(str(creationPath), fileLines, mode)
     assert len(os.listdir(str(creationPath))) == 1
     with open(os.path.join(str(creationPath), os.listdir(str(creationPath))[0]), 'r') as f:
         lines = f.readlines()

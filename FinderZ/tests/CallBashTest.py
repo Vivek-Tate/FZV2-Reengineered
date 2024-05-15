@@ -1,6 +1,6 @@
 import os
 import unittest
-from FinderZV2 import callBash
+from FinderZV2 import Callbash
 
 class TestCallBash(unittest.TestCase):
 
@@ -17,7 +17,7 @@ class TestCallBash(unittest.TestCase):
     def test_callBash(self):
         directory_path = os.path.join(self.test_dir, 'helloworld.bat')
         expected_output = None
-        actual_output = callBash.runFile(directory_path)
+        actual_output = Callbash.runFile(directory_path)
         self.assertEqual(expected_output, actual_output)
 
     @classmethod

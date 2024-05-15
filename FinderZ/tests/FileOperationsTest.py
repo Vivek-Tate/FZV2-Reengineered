@@ -1,6 +1,6 @@
 import pytest
 import os
-from FinderZV2 import fileOperands
+from FinderZV2 import FileOperands
 
 # Finding Files
 @pytest.fixture
@@ -21,14 +21,14 @@ def setup_test_dir(tmp_path):
 
 def test_findFiles_exact_search(setup_test_dir):
     # Test exact search
-    results = fileOperands.findFiles("testfile1.txt", str(setup_test_dir), exactSearch=True)
+    results = FileOperands.findFiles("testfile1.txt", str(setup_test_dir), exactSearch=True)
     expected = [str(setup_test_dir / "testfile1.txt")]
     assert results == expected
 
 
 def test_findFiles_inexact_search(setup_test_dir):
     # Test inexact search
-    results = fileOperands.findFiles("testfile", str(setup_test_dir), exactSearch=False)
+    results = FileOperands.findFiles("testfile", str(setup_test_dir), exactSearch=False)
     expected = [str(setup_test_dir / "testfile1.txt"), str(setup_test_dir / "testfile2.txt")]
     assert set(results) == set(expected)
 
@@ -39,14 +39,14 @@ def test_scanFilesForContent(setup_test_dir):
     file_with_keyword.write_text("This file contains the keyword.")
 
     # Test scanning for content
-    results = fileOperands.scanFilesForContent("keyword", str(setup_test_dir))
+    results = FileOperands.scanFilesForContent("keyword", str(setup_test_dir))
     expected = [str(file_with_keyword)]
     assert results == expected
 
 # Create Files
 def test_createFiles(setup_test_dir):
     # Create files
-    fileOperands.createFiles(3, "testcreatefile", ".txt", str(setup_test_dir))
+    FileOperands.createFiles(3, "testcreatefile", ".txt", str(setup_test_dir))
 
     # Verify that the files were created
     created_files = [f for f in os.listdir(setup_test_dir) if f.startswith("testcreatefile") and f.endswith(".txt")]
@@ -59,7 +59,7 @@ def test_findAndReplaceInFiles(setup_test_dir):
     file_path.write_text("This line contains a keyword.")
 
     # Perform the find and replace
-    fileOperands.findAndReplaceInFiles("keyword", "replacement", str(setup_test_dir))
+    FileOperands.findAndReplaceInFiles("keyword", "replacement", str(setup_test_dir))
 
     # Check that the replacement was made
     content = file_path.read_text()
@@ -81,7 +81,7 @@ def test_mergeClassFolders(setup_test_dir, tmp_path):
     merge_destination.mkdir()
 
     # Merge the folders
-    fileOperands.mergeClassFolders(str(setup_test_dir), str(merge_destination))
+    FileOperands.mergeClassFolders(str(setup_test_dir), str(merge_destination))
 
     # Verify the merge
     assert (merge_destination / "file1.txt").exists()
@@ -94,14 +94,14 @@ def test_xor_encrypt_decrypt_file(setup_test_dir):
     file_path.write_text("This is a secret message.")
 
     # Encrypt the file
-    fileOperands.xor_encrypt_file(str(file_path), "key")
+    FileOperands.xor_encrypt_file(str(file_path), "key")
 
     # Verify encryption
     encrypted_path = str(file_path) + ".enc"
     assert os.path.exists(encrypted_path)
 
     # Decrypt the file
-    fileOperands.xor_decrypt_file(encrypted_path, "key")
+    FileOperands.xor_decrypt_file(encrypted_path, "key")
 
     # Verify decryption
     decrypted_path = setup_test_dir / "encryptfile.txt"
@@ -115,14 +115,14 @@ def test_calculateFileSize(setup_test_dir):
     file_path.write_text("This is a test file with some content.")
 
     # Calculate file size
-    size = fileOperands.calculateFileSize(str(file_path))
+    size = FileOperands.calculateFileSize(str(file_path))
 
     # Verify the file size
     assert size == os.path.getsize(str(file_path))
 
 def test_calculateDirectorySize(setup_test_dir):
     # Calculate directory size
-    size = fileOperands.calculateDirectorySize(str(setup_test_dir))
+    size = FileOperands.calculateDirectorySize(str(setup_test_dir))
 
     # Verify the directory size
     expected_size = sum(os.path.getsize(str(f)) for f in setup_test_dir.rglob('*') if f.is_file())
@@ -140,7 +140,7 @@ def test_compress_decompress_files(setup_test_dir, tmp_path):
 
     # Compress the files
     zip_path = tmp_path / "test.zip"
-    fileOperands.compressFiles([str(file1), str(file2)], str(zip_path))
+    FileOperands.compressFiles([str(file1), str(file2)], str(zip_path))
 
     # Verify the zip file was created
     assert os.path.exists(str(zip_path))
@@ -148,7 +148,7 @@ def test_compress_decompress_files(setup_test_dir, tmp_path):
     # Decompress the files
     extract_path = tmp_path / "extracted"
     extract_path.mkdir()
-    fileOperands.decompressFiles(str(zip_path), str(extract_path))
+    FileOperands.decompressFiles(str(zip_path), str(extract_path))
 
     # Verify the files were extracted
     assert (extract_path / "file1.txt").exists()
