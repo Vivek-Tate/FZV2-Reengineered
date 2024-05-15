@@ -25,6 +25,7 @@ class TestBackup(unittest.TestCase):
     def testBackup(self):
         backup_dirs = [self.backup_dir]
 
+        # Backup.backup(self.main_dir, backup_dirs)
         Backup.backup(self.main_dir, backup_dirs)
 
         main_dir_files = GatherInfo.getAllFileNamesinDir(self.main_dir)

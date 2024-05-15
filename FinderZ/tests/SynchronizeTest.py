@@ -2,8 +2,8 @@ import os
 import pytest
 from unittest.mock import patch, MagicMock
 
-from FinderZV2 import Synchronize, Logging, \
-    fileOperands  # Make sure to import the module where your Synchronize class is defined
+from FinderZV2 import Synchronize, Logging
+from FinderZV2 import FileOperands  # Make sure to import the module where your Synchronize class is defined
 
 
 @pytest.fixture
@@ -54,7 +54,7 @@ def test_backUpToSyncFolder_file_exists():
             patch('os.path.exists', return_value=True), \
             patch('os.remove') as mock_remove, \
             patch('shutil.rmtree') as mock_rmtree, \
-            patch.object(fileOperands, 'copyFile') as mock_copy_file:
+            patch.object(FileOperands, 'copyFile') as mock_copy_file:
         # Test
         Synchronize.backUpToSyncFolder(file_path, sync_backup_folder_name, main_dir, sync_dir)
 
@@ -85,7 +85,7 @@ def test_backUpToSyncFolder_directory_exists():
             patch('os.path.exists', return_value=True), \
             patch('os.remove') as mock_remove, \
             patch('shutil.rmtree') as mock_rmtree, \
-            patch.object(fileOperands, 'copyDir') as mock_copy_dir:
+            patch.object(FileOperands, 'copyDir') as mock_copy_dir:
         # Test
         Synchronize.backUpToSyncFolder(directory_path, sync_backup_folder_name, main_dir, sync_dir)
 
@@ -115,7 +115,7 @@ def test_backUpToSyncFolder_permission_error(backup_setup):
             patch('os.path.exists', return_value=True), \
             patch('os.remove', side_effect=PermissionError("Permission denied")), \
             patch('shutil.rmtree'), \
-            patch.object(fileOperands, 'copyFile') as mock_copy_file:
+            patch.object(FileOperands, 'copyFile') as mock_copy_file:
         with pytest.raises(PermissionError):
             Synchronize.backUpToSyncFolder(backup_setup['file_path'], backup_setup['sync_backup_folder_name'],
                                            backup_setup['main_dir'], backup_setup['sync_dir'])
