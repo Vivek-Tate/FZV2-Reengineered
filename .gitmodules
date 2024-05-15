@@ -4,3 +4,6 @@
 [submodule "assignment_reports/dynamic-analysis"]
 	path = assignment_reports/dynamic-analysis
 	url = https://github.com/UOS-COM3523-6523-2023-24-Spring/week-4-dynamic-analysis-pgt04.git
+[submodule "assignment_reports/repository-analysis"]
+	path = assignment_reports/repository-analysis
+	url = https://github.com/UOS-COM3523-6523-2023-24-Spring/week-5-version-analysis-pgt04.git
