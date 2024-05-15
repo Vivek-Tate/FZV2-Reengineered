@@ -8,7 +8,6 @@ from .GatherInfo import GatherInfo
 from .Logging import Logging
 from .Backup import Backup
 from .FileOperands import FileOperands
-from .FileUtils import FileUtils
 from .Callbash import Callbash
 from .Synchronize import Synchronize
 
