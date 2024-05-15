@@ -1,11 +1,12 @@
 import os
 import shutil
 import time
-from FinderZV2 import GatherInfo
-from FinderZV2 import Logging
-from FinderZV2 import FileOperands
-from FinderZV2 import Synchronize
+from .GatherInfo import GatherInfo
+from .Logging import Logging
+from .FileOperands import FileOperands
+from .Synchronize import Synchronize
 
+# Class Backup: Unlike synchronization, this backs up to a 'child' directory, meaning that the 'child' directory plays no role on the parent one.
 class Backup:
     # Capture the newLogList from the mainIteration function:
     def main(parentmaindir, childbackupdir, loggingBool, log_non_critical=True):

@@ -1,8 +1,8 @@
 import os
 import shutil
-from FinderZV2 import FileOperands
-from FinderZV2 import GatherInfo
-from FinderZV2 import Logging
+from .GatherInfo import GatherInfo
+from .Logging import Logging
+from .FileOperands import FileOperands
 
 # Main Synchronize class:
 class Synchronize:
@@ -529,3 +529,4 @@ class Synchronize:
         if loggingBool:
             # Write logs to file:
             Logging.writeLogsToFile(logList, 'synchronize')
+
