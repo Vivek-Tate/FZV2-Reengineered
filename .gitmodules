@@ -1,3 +1,6 @@
-[submodule "assignment_reports/assignment_reports/week-3-static-analysis-pgt04"]
-	path = assignment_reports/assignment_reports/week-3-static-analysis-pgt04
+[submodule "assignment_reports/static-analysis"]
+	path = assignment_reports/static-analysis
 	url = https://github.com/UOS-COM3523-6523-2023-24-Spring/week-3-static-analysis-pgt04.git
+[submodule "assignment_reports/dynamic-analysis"]
+	path = assignment_reports/dynamic-analysis
+	url = https://github.com/UOS-COM3523-6523-2023-24-Spring/week-4-dynamic-analysis-pgt04.git
