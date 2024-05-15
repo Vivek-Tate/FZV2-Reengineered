@@ -1,0 +1,51 @@
+name: Python Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: [3.11]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest
+        pip install setuptools
+
+    - name: Install package
+      run: |
+        cd FinderZ/src
+        pip install -e .
+
+    - name: Set PYTHONPATH
+      run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)/FinderZ/src" >> $GITHUB_ENV
+
+    - name: Run tests
+      run: |
+        pytest FinderZ/tests/GatherInfoTest.py
+        pytest FinderZ/tests/FileOperationsTest.py
+        pytest FinderZ/tests/LoggingTest.py
+        pytest FinderZ/tests/SynchronizeTest.py
+        pytest FinderZ/tests/CallBashTest.py
+        pytest FinderZ/tests/BackupTest.py
+      env:
+        PYTHONPATH: ${{ env.PYTHONPATH }}
