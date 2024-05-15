@@ -1,7 +1,6 @@
 import pytest
 import os
-from FinderZV2 import Logging, \
-    writeLogsToFile  # Replace 'your_module' with the actual module name where Logging class is defined
+from FinderZV2 import Logging, writeLogsToFile
 
 
 # Define the fixture here
