@@ -2,7 +2,7 @@ import os
 import pytest
 from unittest.mock import patch, MagicMock
 
-from FinderZV2 import Synchronize, GatherInfo, \
+from FinderZV2 import Synchronize, Logging, \
     fileOperands  # Make sure to import the module where your Synchronize class is defined
 
 
@@ -24,6 +24,7 @@ def backup_setup():
         "file2": "hash2",
         "file3": "hash3"
     }
+
 
 @pytest.fixture
 def file_hashes():
@@ -119,3 +120,52 @@ def test_backUpToSyncFolder_permission_error(backup_setup):
             Synchronize.backUpToSyncFolder(backup_setup['file_path'], backup_setup['sync_backup_folder_name'],
                                            backup_setup['main_dir'], backup_setup['sync_dir'])
         mock_copy_file.assert_not_called()  # Ensure no copy operation if removal fails
+
+
+# Assuming the functions are in a module named 'sync_module'
+
+@pytest.mark.parametrize("input_path, expected_output", [
+    ("/path/to/dir/", "/path/to/dir/"),
+    ("C:\\path\\to\\dir\\", "C:\\path\\to\\dir\\"),
+    ("/path/to/dir", "/path/to/dir/"),
+    ("C:\\path\\to\\dir", "C:\\path\\to\\dir/"),
+    ("", "/")
+])
+def test_organizePathSlashes(input_path, expected_output):
+    assert Synchronize.organizePathSlashes(input_path) == expected_output
+
+
+def test_createSyncBackupFolder_directories_do_not_exist():
+    dir1 = "/path/to/dir1"
+    dir2 = "/path/to/dir2"
+    syncBackUpFolderName = "backup"
+
+    with patch('os.chdir'), \
+            patch('os.path.exists', return_value=False), \
+            patch('os.mkdir') as mock_mkdir:
+        Synchronize.createSyncBackupFolder(dir1, dir2, syncBackUpFolderName)
+        assert mock_mkdir.call_count == 2  # Ensure the mkdir is called twice
+
+
+def test_createSyncBackupFolder_directories_already_exist():
+    dir1 = "/path/to/dir1"
+    dir2 = "/path/to/dir2"
+    syncBackUpFolderName = "backup"
+
+    with patch('os.chdir'), \
+            patch('os.path.exists', return_value=True), \
+            patch('os.mkdir') as mock_mkdir:
+        Synchronize.createSyncBackupFolder(dir1, dir2, syncBackUpFolderName)
+        mock_mkdir.assert_not_called()  # Ensure mkdir is not called since the directories exist
+
+
+def test_createSyncBackupFolder_permission_error():
+    dir1 = "/path/to/dir1"
+    dir2 = "/path/to/dir2"
+    syncBackUpFolderName = "backup"
+
+    with patch('os.chdir'), \
+            patch('os.path.exists', return_value=False), \
+            patch('os.mkdir', side_effect=PermissionError("Permission denied")):
+        with pytest.raises(PermissionError):
+            Synchronize.createSyncBackupFolder(dir1, dir2, syncBackUpFolderName)
