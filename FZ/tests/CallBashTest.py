@@ -1,6 +1,6 @@
 import os
 import unittest
-from FinderZV2 import Callbash
+from FZV2 import Callbash
 
 class TestCallBash(unittest.TestCase):
 
