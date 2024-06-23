@@ -1,6 +1,6 @@
 import pytest
 import os
-from FinderZV2 import Logging
+from FZV2 import Logging
 
 
 # Define the fixture here
