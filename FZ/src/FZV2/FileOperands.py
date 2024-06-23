@@ -2,7 +2,7 @@ import os
 import shutil
 import hashlib
 import zipfile
-from FinderZV2 import GatherInfo
+from FZV2 import GatherInfo
 
 
 class FileUtils:
