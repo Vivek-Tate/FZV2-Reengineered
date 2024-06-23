@@ -1,7 +1,7 @@
 import os
 import unittest
-from FinderZV2 import Backup
-from FinderZV2 import GatherInfo
+from FZV2 import Backup
+from FZV2 import GatherInfo
 
 class TestBackup(unittest.TestCase):
 
