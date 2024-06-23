@@ -1,6 +1,6 @@
 import pytest
 import os
-from FinderZV2 import FileOperands
+from FZV2 import FileOperands
 
 # Finding Files
 @pytest.fixture
