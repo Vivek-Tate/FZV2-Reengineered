@@ -1,6 +1,6 @@
 import unittest
 import os
-from FinderZV2 import GatherInfo
+from FZV2 import GatherInfo
 
 class GatherInfoTest(unittest.TestCase):
 
