@@ -2,8 +2,8 @@ import os
 import pytest
 from unittest.mock import patch, MagicMock
 
-from FinderZV2 import Synchronize, Logging
-from FinderZV2 import FileOperands  # Make sure to import the module where your Synchronize class is defined
+from FZV2 import Synchronize, Logging
+from FZV2 import FileOperands  # Make sure to import the module where your Synchronize class is defined
 
 
 @pytest.fixture
