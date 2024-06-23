@@ -29,5 +29,5 @@ To clone the project repository, use the following command:
 https://github.com/Vivek-Tate/FZV2-Reengineered.git
 ```
 
-Disclaimer
+### Disclaimer:
 This project is not intended for use or code modification. It was re-engineered as part of the COM6523 - Software Reengineering module and is made public solely for understanding the concept of reengineering and for academic purposes. All rights to the original software remain with the original owner.
