@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='FinderZ',
+    name='FZ',
     version='2.1.2',
     description='A tool for gathering information about files and directories',
     author='PGT04-TeamProject',
@@ -9,7 +9,7 @@ setup(
     packages=find_packages(),
     entry_points={
         'console_scripts': [
-            'finderz = FinderZV2:main'
+            'finderz = FZV2:main'
         ]
     },
     install_requires=[
